@@ -1,4 +1,6 @@
 
+using GOpenCL;
+
 /*
  * Plugin boilerplate.
  */
@@ -20,6 +22,17 @@ public static bool plugin_init (Gst.Plugin p)
 }
 
 
+const string program_source = """
+__kernel void simple_kernel (__global float* src, __global float* dst)
+{
+  int gid = get_global_id (0);
+  int lid = get_local_id (0);
+  dst[gid] = src[gid]; //sin(src[gid]) + exp(src[gid]);
+#if DEBUG
+  printf ("Kernel on %d %d- %d\n", gid, lid, dst[gid]);
+#endif
+}
+""";
 
 /*
  * Opening a new namespace below Gst.
@@ -47,32 +60,39 @@ namespace Gst.OpenCl
         "author@fabiand.name");
 
       sink_factory = new Gst.PadTemplate (
-        "sink", 
-        Gst.PadDirection.SINK, 
-        Gst.PadPresence.ALWAYS, 
+        "sink", Gst.PadDirection.SINK, Gst.PadPresence.ALWAYS, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
       src_factory = new Gst.PadTemplate (
-        "src", 
-        Gst.PadDirection.SRC, 
-        Gst.PadPresence.ALWAYS, 
+        "src", Gst.PadDirection.SRC, Gst.PadPresence.ALWAYS, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
       add_pad_template (sink_factory);
       add_pad_template (src_factory);
     }
-    
-
-
-
 
     /*
      * Instance part
      */
+    Context ctx;
+    CommandQueue q;
+    Program program;
+    
     public override bool start ()
     {
+      Platform[] platforms = Platform.get_available ();
+      Platform platform = platforms[0];
+      Device[] devices = platform.get_devices ();
+
+      debug (@"\n$(platforms.length) platform(s) available.");
+      debug (@"\n$(devices.length) device(s) attached to platform $(platform).");
+      
+      ctx = platform.create_context ();
+      q = ctx.create_command_queue ();
+      
+      program = ctx.create_program_with_source (program_source);
       return true;
     }
 
@@ -89,55 +109,17 @@ namespace Gst.OpenCl
     long u = 0;
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
     {
-      for (uint i = outbuf.size; i > 10 ; i--)
-      {
-        float sum = 0;
-        for (uint j = 10 ; j > 0 ; j--)
-          sum += inbuf.data[i+j];
-        sum = sum / 8;
-        outbuf.data[i] = (uint8) sum;
-      }
-//      debug("%g", outbuf.size / 3);
+      var buf_src = ctx.create_host_buffer (sizeof(uint8) * inbuf.data.length, inbuf.data);
+      var buf_dst = ctx.create_host_buffer (sizeof(uint8) * outbuf.data.length, outbuf.data);
+
+      var kernel = program.create_kernel ("simple_kernel", {buf_src, buf_dst});
+//debug("%g", outbuf.data.length);
+      q.enqueue_kernel (kernel, 1, {outbuf.data.length}).wait ();
+//      q.flush ();
+/*      q.enqueue_map_buffer (buf_dst, true).wait ();*/
+
       return Gst.FlowReturn.OK;
     }
-
-    /*All by ourselfs
-    Gst.Pad sink_pad;
-    Gst.Pad src_pad;
-    
-    construct
-    {
-      debug ("construct push");
-      
-      sink_pad = new Gst.Pad.from_template (sink_factory, "sink");
-      sink_pad.set_setcaps_function (setcaps);
-      sink_pad.set_chain_function (chain);
-      sink_pad.set_link_function (link_func);
-      
-      src_pad = new Gst.Pad.from_template (src_factory, "src");
-      sink_pad.set_setcaps_function (setcaps);
-      src_pad.set_link_function (link_func);
-      
-      add_pad (sink_pad);
-      add_pad (src_pad);
-    }
-    
-    public static bool setcaps (Gst.Pad pad, Gst.Caps caps)
-    {
-      return true;
-    }
-    
-    public static Gst.PadLinkReturn link_func (Gst.Pad pad, Gst.Pad peer)
-    {
-      return Gst.PadLinkReturn.OK;
-    }
-
-    public static Gst.FlowReturn chain (Gst.Pad pad, owned Gst.Buffer buf)
-    {
-      Kernel filter = pad.get_parent () as Kernel;
-      //debug ("got thing");
-      return Gst.FlowReturn.OK;
-    }*/
   }
 }
 
