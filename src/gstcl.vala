@@ -1,79 +1,143 @@
 
-using Gst;
+/*
+ * Plugin boilerplate.
+ */
+const Gst.PluginDesc gst_plugin_desc = {
+  0, 10, 
+  "opencl", 
+  "OpenCl plugin",
+  plugin_init,
+  "0.1",
+  "LGPL",
+  "http://",
+  "Package?",
+  "Origin?"
+};
 
-
-
-
-/*[CCode (cname = "plugin_init")]
 public static bool plugin_init (Gst.Plugin p)
 {
-  debug ("Init push xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-  return Gst.Element.register (p, "clpush", Gst.Rank.NONE, typeof(Cl.Push));
-}*/
+  return Gst.Element.register (p, "clkernel", Gst.Rank.NONE, typeof(Gst.OpenCl.Kernel));
+}
 
-namespace Gst
+
+
+/*
+ * Opening a new namespace below Gst.
+ * It is important that the prefix of your namespace matches the symbol 
+ * export regex.
+ */
+namespace Gst.OpenCl
 {
-
-  public class Push : Gst.Element
+  /*
+   * An OpenCL Kernel element.
+   */
+  public class Kernel : Gst.VideoFilter
   {
-    public static Gst.Caps caps; 
-    public static Gst.PadTemplate sink_factory = new Gst.PadTemplate ("sink", Gst.PadDirection.SINK, Gst.PadPresence.ALWAYS, caps.copy());
-    public static Gst.PadTemplate src_factory = new Gst.PadTemplate ("src", Gst.PadDirection.SRC, Gst.PadPresence.ALWAYS, caps.copy());
+    /*
+     * Class part
+     */
+    static Gst.PadTemplate sink_factory;
+    static Gst.PadTemplate src_factory;
+    
+    static construct {
+      set_details_simple (
+        "clkernel", 
+        "Filter", 
+        "Applying a OpenCl kernel", 
+        "author@fabiand.name");
 
-    public static new Gst.StateChangeReturn change_state (Gst.StateChange transition)
+      sink_factory = new Gst.PadTemplate (
+        "sink", 
+        Gst.PadDirection.SINK, 
+        Gst.PadPresence.ALWAYS, 
+        video_format_new_template_caps (Gst.VideoFormat.GRAY8)
+      );
+
+      src_factory = new Gst.PadTemplate (
+        "src", 
+        Gst.PadDirection.SRC, 
+        Gst.PadPresence.ALWAYS, 
+        video_format_new_template_caps (Gst.VideoFormat.GRAY8)
+      );
+
+      add_pad_template (sink_factory);
+      add_pad_template (src_factory);
+    }
+    
+
+
+
+
+    /*
+     * Instance part
+     */
+    public override bool start ()
     {
-      return Gst.StateChangeReturn.SUCCESS;
+      return true;
     }
 
+    public override bool stop ()
+    {
+      return true;
+    }
+    
+    public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
+    {
+      return true;
+    }
+    
+    long u = 0;
+    public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
+    {
+      for (uint i = outbuf.size; i > 10 ; i--)
+      {
+        float sum = 0;
+        for (uint j = 10 ; j > 0 ; j--)
+          sum += inbuf.data[i+j];
+        sum = sum / 8;
+        outbuf.data[i] = (uint8) sum;
+      }
+//      debug("%g", outbuf.size / 3);
+      return Gst.FlowReturn.OK;
+    }
+
+    /*All by ourselfs
     Gst.Pad sink_pad;
     Gst.Pad src_pad;
     
-    public Push ()
+    construct
     {
-      this.set_details_simple (
-        "OpenCL Pusher", 
-        "w/t/f", 
-        "pushing to a opencl buffer", 
-        "me");
+      debug ("construct push");
       
-      this.caps = Gst.Caps.from_string (VideoCaps.RGB);
+      sink_pad = new Gst.Pad.from_template (sink_factory, "sink");
+      sink_pad.set_setcaps_function (setcaps);
+      sink_pad.set_chain_function (chain);
+      sink_pad.set_link_function (link_func);
       
-      this.sink_pad = new Gst.Pad.from_template (Push.sink_factory, "sink");
-      this.sink_pad.set_setcaps_function (Push.setcaps);
-      this.sink_pad.set_chain_function (Push.chain);
-      this.add_pad (this.sink_pad);
-
-      this.src_pad = new Gst.Pad.from_template (Push.src_factory, "src");
-      this.add_pad (this.src_pad);
+      src_pad = new Gst.Pad.from_template (src_factory, "src");
+      sink_pad.set_setcaps_function (setcaps);
+      src_pad.set_link_function (link_func);
+      
+      add_pad (sink_pad);
+      add_pad (src_pad);
     }
     
     public static bool setcaps (Gst.Pad pad, Gst.Caps caps)
     {
-      // FIXME check caps get props p22
       return true;
+    }
+    
+    public static Gst.PadLinkReturn link_func (Gst.Pad pad, Gst.Pad peer)
+    {
+      return Gst.PadLinkReturn.OK;
     }
 
     public static Gst.FlowReturn chain (Gst.Pad pad, owned Gst.Buffer buf)
     {
-      Push filter = pad.get_parent () as Push;
+      Kernel filter = pad.get_parent () as Kernel;
+      //debug ("got thing");
       return Gst.FlowReturn.OK;
-    }
-
-
-
-
-
-    public static bool setup (Push p, Gst.Buffer buf)
-    {
-      // FIXME ?
-      debug ("Setup push xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-      return true;
-    }
-    public Gst.FlowReturn filter (Gst.BaseTransform bt, Gst.Buffer buf_out, Gst.Buffer buf_in)
-    {
-      return 0;
-    }
+    }*/
   }
 }
-
 
