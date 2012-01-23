@@ -62,12 +62,12 @@ namespace Gst.OpenCl
         "author@fabiand.name");
 
       sink_factory = new Gst.PadTemplate (
-        "sink", Gst.PadDirection.SINK, Gst.PadPresence.ALWAYS, 
+        "sink_%%d", Gst.PadDirection.SINK, Gst.PadPresence.ALWAYS, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
       
       more_sink_factory = new Gst.PadTemplate (
-        "more_sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
+        "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
@@ -77,7 +77,7 @@ namespace Gst.OpenCl
       );
 
       add_pad_template (sink_factory);
-      add_pad_template (more_sink_factory);
+      //add_pad_template (more_sink_factory);
       add_pad_template (src_factory);
     }
 
