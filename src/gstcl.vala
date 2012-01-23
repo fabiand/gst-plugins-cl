@@ -1,4 +1,5 @@
 
+// Have a look at https://gitorious.org/valastuff/ etc
 using GOpenCL;
 
 /*
@@ -25,9 +26,9 @@ public static bool plugin_init (Gst.Plugin p)
 const string default_kernel_source = """
 __kernel void 
 default_kernel (__global const uint* src, 
-               const ulong size_src,
-      __global       uint* dst, 
-               const ulong size_dst)
+                         const ulong size_src,
+                __global       uint* dst, 
+                         const ulong size_dst)
 {
   int gid = get_global_id (0);
   int lid = get_local_id (0);
@@ -51,7 +52,6 @@ namespace Gst.OpenCl
      * Class part
      */
     static Gst.PadTemplate sink_factory;
-    static Gst.PadTemplate more_sinks_factory;
     static Gst.PadTemplate src_factory;
     
     static construct {
@@ -62,12 +62,7 @@ namespace Gst.OpenCl
         "author@fabiand.name");
 
       sink_factory = new Gst.PadTemplate (
-        "sink_%d", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
-        video_format_new_template_caps (Gst.VideoFormat.GRAY8)
-      );
-      
-      more_sinks_factory = new Gst.PadTemplate (
-        "extsink_%d", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
+        "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
@@ -77,7 +72,6 @@ namespace Gst.OpenCl
       );
 
       add_pad_template (sink_factory);
-      //add_pad_template (more_sinks_factory);
       add_pad_template (src_factory);
     }
 
@@ -124,10 +118,13 @@ namespace Gst.OpenCl
       return true;
     }
 
+    Gst.Pad p;
     public override unowned Gst.Pad request_new_pad (Gst.PadTemplate templ, string? name)
     {
       debug (@"New pad requested! $(name)");
-      return null;
+      p = new Gst.Pad.from_template (templ, name);
+      this.add_pad (p);
+      return p;
     }
 
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
