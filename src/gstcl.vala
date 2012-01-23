@@ -51,7 +51,7 @@ namespace Gst.OpenCl
      * Class part
      */
     static Gst.PadTemplate sink_factory;
-    static Gst.PadTemplate more_sink_factory;
+    static Gst.PadTemplate more_sinks_factory;
     static Gst.PadTemplate src_factory;
     
     static construct {
@@ -62,12 +62,12 @@ namespace Gst.OpenCl
         "author@fabiand.name");
 
       sink_factory = new Gst.PadTemplate (
-        "sink_%%d", Gst.PadDirection.SINK, Gst.PadPresence.ALWAYS, 
+        "sink_%d", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
       
-      more_sink_factory = new Gst.PadTemplate (
-        "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
+      more_sinks_factory = new Gst.PadTemplate (
+        "extsink_%d", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
@@ -77,7 +77,7 @@ namespace Gst.OpenCl
       );
 
       add_pad_template (sink_factory);
-      //add_pad_template (more_sink_factory);
+      //add_pad_template (more_sinks_factory);
       add_pad_template (src_factory);
     }
 
@@ -91,6 +91,8 @@ namespace Gst.OpenCl
     
     public string kernel_name { get; set; default = "default_kernel"; }
     public string kernel_file { get; set; default = null; }
+    
+    Gst.Caps incaps;
     
     public override bool start ()
     {
@@ -118,6 +120,7 @@ namespace Gst.OpenCl
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
+      this.incaps = incaps;
       return true;
     }
 
@@ -138,6 +141,7 @@ namespace Gst.OpenCl
       
       buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
       buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
+      
       ulong src_s = inbuf.size, 
             dst_s = outbuf.size;
       buf_src_s = ctx.create_source_buffer (sizeof(ulong), &src_s);
