@@ -16,7 +16,7 @@ plugin_LTLIBRARIES = libgstpush.la
 # sources used to compile this plug-in
 
 .PHONY: gstcl.c gopencl.c
-VALAFLAGS = --verbose --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 --vapidir=. --vapidir=/home/fabiand/Arbeit/valastuff/vapis/vapis/ --pkg OpenCL
+VALAFLAGS = --verbose --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 --vapidir=. --vapidir=/home/fabiand/Arbeit/valastuff/vapis/vapis/ --pkg OpenCL --pkg posix --pkg gio-2.0 --debug 
 gstcl.c: gopencl.c
 	$(VALAC) $(VALAFLAGS) --library=libgstcl -H gstcl.h --ccode -o gstcl.c gstcl.vala --vapidir=. --pkg libgopencl --pkg OpenCL
 
