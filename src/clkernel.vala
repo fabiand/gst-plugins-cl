@@ -25,13 +25,17 @@ namespace Gst.OpenCl
         "author@fabiand.name");
 
       sink_factory = new Gst.PadTemplate (
-        "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
-        video_format_new_template_caps (Gst.VideoFormat.GRAY8)
+        "sink", 
+        Gst.PadDirection.SINK, 
+        Gst.PadPresence.ALWAYS, 
+        new Gst.Caps.any ()
       );
 
       src_factory = new Gst.PadTemplate (
-        "src", Gst.PadDirection.SRC, Gst.PadPresence.ALWAYS, 
-        video_format_new_template_caps (Gst.VideoFormat.GRAY8)
+        "src", 
+        Gst.PadDirection.SRC, 
+        Gst.PadPresence.ALWAYS, 
+        new Gst.Caps.any ()
       );
 
       add_pad_template (sink_factory);
@@ -52,8 +56,8 @@ namespace Gst.OpenCl
     
     const string default_kernel_source = """
 __kernel void 
-default_kernel (__global const uchar* src, 
-                __global       uchar* dst, 
+default_kernel (__global       uchar* dst, 
+                __global const uchar* src, 
                          const uint   size)
 {
   int gid = get_global_id (0);
@@ -88,15 +92,6 @@ default_kernel (__global const uchar* src,
     public override bool stop ()
     {
       return true;
-    }
-
-    Gst.Pad p;
-    public override unowned Gst.Pad request_new_pad (Gst.PadTemplate templ, string? name)
-    {
-      debug (@"New pad requested! $(name)");
-      p = new Gst.Pad.from_template (templ, name);
-      this.add_pad ( p);
-      return p;
     }
 
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)

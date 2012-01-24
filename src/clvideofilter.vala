@@ -16,12 +16,16 @@ namespace Gst.OpenCl
         "author@fabiand.name");
       
       sink_factory = new Gst.PadTemplate (
-        "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
+        "sink", 
+        Gst.PadDirection.SINK, 
+        Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
       src_factory = new Gst.PadTemplate (
-        "src", Gst.PadDirection.SRC, Gst.PadPresence.ALWAYS, 
+        "src", 
+        Gst.PadDirection.SRC, 
+        Gst.PadPresence.ALWAYS, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
       );
 
@@ -54,6 +58,13 @@ default_kernel (__global       uchar* dst,
     construct {
       kernel_source = default_videofilter_source;
     }
+    
+    /*public override unowned Gst.Pad request_new_pad_full (Gst.PadTemplate? templ, string? name, Gst.Caps? caps)
+    {
+      debug (@"New pad requested!");
+      this.add_pad (new Gst.Pad.from_template (templ, name));
+      return null;
+    }*/
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
