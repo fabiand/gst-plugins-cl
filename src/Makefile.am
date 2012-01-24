@@ -16,15 +16,16 @@ plugin_LTLIBRARIES = libgstpush.la
 # sources used to compile this plug-in
 
 .PHONY: gstcl.c gopencl.c
-VALAFLAGS = --verbose --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 --vapidir=. --vapidir=/home/fabiand/Arbeit/valastuff/vapis/vapis/ --pkg OpenCL --pkg posix --pkg gio-2.0 --debug 
+VALAFLAGS = --verbose --debug --vapidir=. --vapidir=/home/fabiand/Arbeit/valastuff/vapis/vapis/ --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 --pkg OpenCL --pkg posix --pkg gio-2.0 
+
 gstcl.c: gopencl.c
-	$(VALAC) $(VALAFLAGS) --library=libgstcl -H gstcl.h --ccode -o gstcl.c gstcl.vala --vapidir=. --pkg libgopencl --pkg OpenCL
+	$(VALAC) $(VALAFLAGS) --pkg libgopencl --pkg OpenCL --library=libgstcl -H gstcl.h --ccode -o gstcl.c gstopencl.vala clkernel.vala clvideofilter.vala
 
 gopencl.c:
 	$(VALAC) $(VALAFLAGS) --library=libgopencl -H gopencl.h --ccode -o gopencl.c \
 	/home/fabiand/Arbeit/valastuff/vapis/tests/opencl/gopencl.vala
 
-libgstpush_la_SOURCES = gstcl.c gopencl.c #fix.c
+libgstpush_la_SOURCES = gstcl.c gopencl.c
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
 libgstpush_la_CFLAGS = $(GST_CFLAGS)

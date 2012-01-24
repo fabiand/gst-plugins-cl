@@ -1,27 +1,8 @@
 
+/* vim: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab: */
+
 // Have a look at https://gitorious.org/valastuff/ etc
 using GOpenCL;
-
-/*
- * Plugin boilerplate.
- */
-const Gst.PluginDesc gst_plugin_desc = {
-  0, 10, 
-  "opencl", 
-  "OpenCl plugin",
-  plugin_init,
-  "0.1",
-  "LGPL",
-  "http://",
-  "Package?",
-  "Origin?"
-};
-
-public static bool plugin_init (Gst.Plugin p)
-{
-  return Gst.Element.register (p, "clkernel", Gst.Rank.NONE, typeof(Gst.OpenCl.Kernel));
-}
-
 
 const string default_kernel_source = """
 __kernel void 
@@ -36,11 +17,6 @@ default_kernel (__global const uint* src,
 }
 """;
 
-/*
- * Opening a new namespace below Gst.
- * It is important that the prefix of your namespace matches the symbol 
- * export regex.
- */
 namespace Gst.OpenCl
 {
   /*
@@ -51,8 +27,8 @@ namespace Gst.OpenCl
     /*
      * Class part
      */
-    static Gst.PadTemplate sink_factory;
-    static Gst.PadTemplate src_factory;
+    protected static Gst.PadTemplate sink_factory;
+    protected static Gst.PadTemplate src_factory;
     
     static construct {
       set_details_simple (
@@ -78,15 +54,13 @@ namespace Gst.OpenCl
     /*
      * Instance part
      */
-    Platform platform;
-    Context ctx;
-    CommandQueue q;
-    Program program;
+    protected Platform platform;
+    protected Context ctx;
+    protected CommandQueue q;
+    protected Program program;
     
     public string kernel_name { get; set; default = "default_kernel"; }
     public string kernel_file { get; set; default = null; }
-    
-    Gst.Caps incaps;
     
     public override bool start ()
     {
@@ -111,30 +85,25 @@ namespace Gst.OpenCl
     {
       return true;
     }
-    
-    public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
-    {
-      this.incaps = incaps;
-      return true;
-    }
 
     Gst.Pad p;
     public override unowned Gst.Pad request_new_pad (Gst.PadTemplate templ, string? name)
     {
       debug (@"New pad requested! $(name)");
       p = new Gst.Pad.from_template (templ, name);
-      this.add_pad (p);
+      this.add_pad ( p);
       return p;
     }
 
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
+    requires (inbuf.size == outbuf.size)
     {
       GOpenCL.Buffer buf_src,
                      buf_src_s,
                      buf_dst,
                      buf_dst_s;
 
-      uint[] dst = new uint[outbuf.size];
+      uint8[] dst = new uint8[outbuf.size];
       
       buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
       buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
@@ -144,13 +113,13 @@ namespace Gst.OpenCl
       buf_src_s = ctx.create_source_buffer (sizeof(ulong), &src_s);
       buf_dst_s = ctx.create_source_buffer (sizeof(ulong), &dst_s);
       
-      var kernel = program.create_kernel (this.kernel_name, {buf_src, 
-                                                             buf_src_s,
-                                                             buf_dst,
-                                                             buf_dst_s});
+      var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
+                                                             buf_dst_s,
+                                                             buf_src,
+                                                             buf_src_s});
       
       q.enqueue_kernel (kernel, 1, {inbuf.size});
-      q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint) * outbuf.size);
+      q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint8) * outbuf.size);
 
       q.finish ();
 
@@ -172,4 +141,3 @@ namespace Gst.OpenCl
     }
   }
 }
-
