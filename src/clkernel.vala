@@ -4,19 +4,6 @@
 // Have a look at https://gitorious.org/valastuff/ etc
 using GOpenCL;
 
-const string default_kernel_source = """
-__kernel void 
-default_kernel (__global const uchar* src, 
-                         const ulong  size_src,
-                __global       uchar* dst, 
-                         const ulong  size_dst)
-{
-  int gid = get_global_id (0);
-  int lid = get_local_id (0);
-  dst[gid] = src[gid];
-}
-""";
-
 namespace Gst.OpenCl
 {
   /*
@@ -61,6 +48,23 @@ namespace Gst.OpenCl
     
     public string kernel_name { get; set; default = "default_kernel"; }
     public string kernel_file { get; set; default = null; }
+    protected string kernel_source;
+    
+    const string default_kernel_source = """
+__kernel void 
+default_kernel (__global const uchar* src, 
+                __global       uchar* dst, 
+                         const uint   size)
+{
+  int gid = get_global_id (0);
+  int lid = get_local_id (0);
+  dst[gid] = src[gid];
+}
+""";
+    
+    construct {
+      kernel_source = default_kernel_source;
+    }
     
     public override bool start ()
     {
@@ -74,7 +78,7 @@ namespace Gst.OpenCl
       ctx = platform.create_context ();
       q = ctx.create_command_queue ();
       
-      string source = this.load_kernel_source () ?? default_kernel_source;
+      string source = this.load_kernel_source () ?? kernel_source;
       debug (@"Building program from:\n $(source)");
       program = ctx.create_program_with_source (source);
       
@@ -108,15 +112,9 @@ namespace Gst.OpenCl
       buf_src = ctx.create_source_buffer (sizeof(uint8) * inbuf.size, inbuf.data);
       buf_dst = ctx.create_dst_buffer (sizeof(uint8) * outbuf.size);
       
-      ulong src_s = inbuf.size, 
-            dst_s = outbuf.size;
-      buf_src_s = ctx.create_source_buffer (sizeof(ulong), &src_s);
-      buf_dst_s = ctx.create_source_buffer (sizeof(ulong), &dst_s);
-      
       var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
-                                                             buf_dst_s,
-                                                             buf_src,
-                                                             buf_src_s});
+                                                             buf_src});
+      kernel.add_argument (&inbuf.size, sizeof(uint));
       
       q.enqueue_kernel (kernel, 1, {inbuf.size});
       q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint8) * outbuf.size);

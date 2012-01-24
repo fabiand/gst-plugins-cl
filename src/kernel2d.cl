@@ -36,3 +36,25 @@ median_filter (__global       uchar* dst,
 
   dst[idx] = r / n;
 }
+
+
+__kernel void 
+max_filter (__global       uchar* dst, 
+               __global const uchar* src, 
+                        const int width,
+                        const int height)
+{
+  const int x = get_global_id (0);
+  const int y = get_global_id (1);
+  const int idx = y * width + x;
+  
+  float r = 0;
+  for (int i = clamp(x - RADIX, 0, width); i < clamp(x + RADIX, 0, width); i++)
+  for (int j = clamp(y - RADIX, 0, height); j < clamp(y + RADIX, 0, height); j++)
+  {
+    r = max( (float)r, (float)src[j * width + i]);
+  }
+
+  dst[idx] = r;
+}
+

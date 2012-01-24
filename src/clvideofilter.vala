@@ -14,7 +14,7 @@ namespace Gst.OpenCl
         "Filter", 
         "Applying a OpenCl kernel as a filter to a video.", 
         "author@fabiand.name");
-
+      
       sink_factory = new Gst.PadTemplate (
         "sink", Gst.PadDirection.SINK, Gst.PadPresence.REQUEST, 
         video_format_new_template_caps (Gst.VideoFormat.GRAY8)
@@ -35,6 +35,25 @@ namespace Gst.OpenCl
     Gst.VideoFormat format;
     int width;
     int height;
+    
+    string default_videofilter_source = """
+__kernel void 
+default_kernel (__global       uchar* dst, 
+                __global const uchar* src, 
+                         const int width,
+                         const int height)
+{
+  const int x = get_global_id (0);
+  const int y = get_global_id (1);
+  const int idx = y * width + x;
+
+  dst[idx] = src[idx];
+}
+""";
+    
+    construct {
+      kernel_source = default_videofilter_source;
+    }
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
