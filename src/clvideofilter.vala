@@ -5,6 +5,9 @@ namespace Gst.OpenCl
 {
   public class VideoFilter : Kernel
   {
+    /*
+     * Class part
+     */
     static construct {
       set_details_simple (
         "clvideofilter", 
@@ -26,6 +29,9 @@ namespace Gst.OpenCl
       add_pad_template (src_factory);
     }
     
+    /*
+     * Instance part
+     */
     Gst.VideoFormat format;
     int width;
     int height;
@@ -33,6 +39,7 @@ namespace Gst.OpenCl
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
       debug (@"$(incaps)");
+      int w = 0, h = 0;
       Gst.video_format_parse_caps  (incaps, ref format, ref width, ref height);
       return true;
     }
@@ -41,21 +48,17 @@ namespace Gst.OpenCl
     requires (inbuf.size == outbuf.size)
     {
       GOpenCL.Buffer buf_src,
-                     buf_dst,
-                     buf_width,
-                     buf_height;
+                     buf_dst;
 
       uint8[] dst = new uint8[outbuf.size];
       
-      buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
       buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
-      buf_width = ctx.create_source_buffer (sizeof(int), &width);
-      buf_height = ctx.create_source_buffer (sizeof(int), &height);
+      buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
       
       var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
-                                                             buf_src,
-                                                             buf_width,
-                                                             buf_height});
+                                                             buf_src});
+      kernel.add_argument (&width, sizeof(int));
+      kernel.add_argument (&height, sizeof(int));
       
       q.enqueue_kernel (kernel, 2, {width, height});
       q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint8) * outbuf.size);

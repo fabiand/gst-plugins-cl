@@ -6,10 +6,10 @@ using GOpenCL;
 
 const string default_kernel_source = """
 __kernel void 
-default_kernel (__global const uint* src, 
-                         const ulong size_src,
-                __global       uint* dst, 
-                         const ulong size_dst)
+default_kernel (__global const uchar* src, 
+                         const ulong  size_src,
+                __global       uchar* dst, 
+                         const ulong  size_dst)
 {
   int gid = get_global_id (0);
   int lid = get_local_id (0);
@@ -105,8 +105,8 @@ namespace Gst.OpenCl
 
       uint8[] dst = new uint8[outbuf.size];
       
-      buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
-      buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
+      buf_src = ctx.create_source_buffer (sizeof(uint8) * inbuf.size, inbuf.data);
+      buf_dst = ctx.create_dst_buffer (sizeof(uint8) * outbuf.size);
       
       ulong src_s = inbuf.size, 
             dst_s = outbuf.size;
