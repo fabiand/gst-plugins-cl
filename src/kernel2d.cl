@@ -14,7 +14,7 @@ default_kernel (__global       uchar* dst,
   dst[idx] = src[idx];
 }
 
-#define MEDIAN_RADIX 4
+#define MEDIAN_RADIX 6
 __kernel void 
 median_filter (__global       uchar* dst, 
                __global const uchar* src, 
@@ -37,7 +37,7 @@ median_filter (__global       uchar* dst,
   dst[idx] = r / n;
 }
 
-#define MAX_RADIX 8
+#define MAX_RADIX 2
 __kernel void 
 max_filter (__global       uchar* dst, 
                __global const uchar* src, 
@@ -58,7 +58,7 @@ max_filter (__global       uchar* dst,
   dst[idx] = r;
 }
 
-#define NUM_BINS 8
+#define NUM_BINS 16
 __kernel void 
 posterize (__global       uchar* dst, 
            __global const uchar* src, 

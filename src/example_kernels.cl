@@ -33,3 +33,50 @@ else
     output[offset] = (char) sum;
  }
 };
+
+
+#define BI_RADIX 12
+__kernel void 
+bidiff (__global       uchar* dst, 
+        __global const uchar* src, 
+                 const int width,
+                 const int height)
+{
+  int x = get_global_id (0),
+      y = get_global_id (1);
+
+  int w = width / 2;
+  int idx = y * width + x;
+
+  if (x < w)
+  {
+    int n = 0;
+    float r = 0;
+    float sum_a = 0.1, 
+          sum_b = 0.1;
+    
+    for (int lx = clamp(x-BI_RADIX, 0, w) ; lx < clamp(x+BI_RADIX, 0, w) ; lx++)
+    {
+      for (int ly = clamp(y-BI_RADIX, 0, height) ; ly < clamp(y+BI_RADIX, 0, height) ; ly++)
+    {
+        int lidx = ly * width + lx;
+        float lv = src[lidx], 
+              rv = src[lidx + w];
+
+        r += lv * rv;
+        sum_a += lv * lv;
+        sum_b += rv * rv;
+        n++;
+      }
+    }
+    float aa = n * (255*255);
+    aa = (sqrt(sum_a) * sqrt(sum_b))*2;
+    r = r / aa;
+    dst[idx] = r * 255;
+  }
+  else
+  {
+    dst[idx] = src[idx];
+//    dst[idx] = abs(src[idx] - src[idx+w]);
+  }
+}

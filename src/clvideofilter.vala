@@ -42,10 +42,10 @@ namespace Gst.OpenCl
     
     string default_videofilter_source = """
 __kernel void 
-default_kernel (__global       uchar* dst, 
-                __global const uchar* src, 
-                         const int width,
-                         const int height)
+default_kernel (__write_only  image2d_t dst, 
+                __read_only   image2d_t src, 
+                       const  int width,
+                       const  int height)
 {
   const int x = get_global_id (0);
   const int y = get_global_id (1);
@@ -75,6 +75,40 @@ default_kernel (__global       uchar* dst,
     }
     
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
+    requires (inbuf.size == outbuf.size)
+    {
+      GOpenCL.Buffer buf_src,
+                     buf_dst;
+
+      uint8[] dst = new uint8[outbuf.size];
+      
+/*      buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
+      buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);*/
+      
+      buf_dst = ctx.create_image (sizeof(uint) * outbuf.size, dst, width, height, 8);
+      buf_src = ctx.create_image (sizeof(uint) * inbuf.size, inbuf.data, width, height, 8);
+      
+      var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
+                                                             buf_src});
+      kernel.add_argument (&width, sizeof(int));
+      kernel.add_argument (&height, sizeof(int));
+      
+      q.enqueue_kernel (kernel, 2, {width, height});
+      q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint8) * outbuf.size);
+
+      q.finish ();
+
+      Posix.memcpy (outbuf.data, dst, outbuf.size);
+
+      return Gst.FlowReturn.OK;
+    }
+    
+    
+    /*
+     * The buffer (representing a 2d iimage) is passed to the opencl kernel as 
+     * a buffer, not as an image.
+     */
+    Gst.FlowReturn transform_linear (Gst.Buffer inbuf, Gst.Buffer outbuf)
     requires (inbuf.size == outbuf.size)
     {
       GOpenCL.Buffer buf_src,

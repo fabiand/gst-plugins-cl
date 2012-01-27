@@ -50,9 +50,23 @@ namespace Gst.OpenCl
     protected CommandQueue q;
     protected Program program;
     
-    public string kernel_name { get; set; default = "default_kernel"; }
-    public string kernel_file { get; set; default = null; }
     protected string kernel_source;
+    
+    public uint platform_idx {
+      get;
+      set;
+      default = 0;
+    }
+    public string kernel_name {
+      get;
+      set;
+      default = "default_kernel";
+    }
+    public string kernel_file {
+      get;
+      set;
+      default = null;
+    }
     
     const string default_kernel_source = """
 __kernel void 
@@ -73,10 +87,11 @@ default_kernel (__global       uchar* dst,
     public override bool start ()
     {
       Platform[] platforms = Platform.get_available ();
-      platform = platforms[0];
+      platform = platforms[platform_idx];
       Device[] devices = platform.get_devices ();
 
       debug (@"\n$(platforms.length) platform(s) available.");
+      debug (@"Platform: $(platform.get_info(OpenCL.PlatformInfo.NAME))");
       debug (@"\n$(devices.length) device(s) attached to platform $(platform).");
       
       ctx = platform.create_context ();
@@ -98,9 +113,7 @@ default_kernel (__global       uchar* dst,
     requires (inbuf.size == outbuf.size)
     {
       GOpenCL.Buffer buf_src,
-                     buf_src_s,
-                     buf_dst,
-                     buf_dst_s;
+                     buf_dst;
 
       uint8[] dst = new uint8[outbuf.size];
       
