@@ -82,55 +82,11 @@ default_kernel (__global        uchar* dst,
       
       bool r = true;
       
-      r &= context_supports_imageformat ();
-      
       return r;
     }
     
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
     requires (inbuf.size == outbuf.size)
-    {
-      return transform_image2d (inbuf, outbuf);
-    }
-    
-    
-    /*
-     * The buffer (representing a 2d iimage) is passed to the opencl kernel as 
-     * a buffer, not as an image.
-     */
-    Gst.FlowReturn transform_buffer (Gst.Buffer inbuf, Gst.Buffer outbuf)
-    {
-      GOpenCL.Buffer buf_src,
-                     buf_dst;
-
-      uint8[] dst = new uint8[outbuf.size];
-      
-      buf_dst = ctx.create_dst_buffer (sizeof(uint) * outbuf.size);
-      buf_src = ctx.create_source_buffer (sizeof(uint) * inbuf.size, inbuf.data);
-      
-      var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
-                                                             buf_src});
-
-      kernel.add_argument (&width, sizeof(int));
-      kernel.add_argument (&height, sizeof(int));
-      
-      q.enqueue_kernel (kernel, 2, {width, height});
-      q.enqueue_read_buffer (buf_dst, true, dst, sizeof(uint8) * outbuf.size);
-
-      q.finish ();
-
-      Posix.memcpy (outbuf.data, dst, outbuf.size);
-
-      return Gst.FlowReturn.OK;
-    }
-    
-    bool context_supports_imageformat ()
-    {
-      OpenCL.ImageFormat[] fs = ctx.supported_image_formats ();
-      return true; //FIXME
-    }
-    
-    Gst.FlowReturn transform_image2d (Gst.Buffer inbuf, Gst.Buffer outbuf)
     {
       GOpenCL.Image2D buf_src,
                       buf_dst;
@@ -139,11 +95,13 @@ default_kernel (__global        uchar* dst,
       buf_dst = ctx.create_image (width, height);
       buf_src = ctx.create_image (width, height);
 
-      src_sampler = new GOpenCL.Sampler (ctx, false, OpenCL.AddressingMode.CLAMP, OpenCL.FilterMode.NEAREST);
+      src_sampler = new GOpenCL.Sampler (ctx, false, 
+                                         OpenCL.AddressingMode.CLAMP, 
+                                         OpenCL.FilterMode.NEAREST);
 
-      var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
-                                                             buf_src});
-                                                             
+      var kernel = program.create_kernel (this.kernel_name);
+      kernel.add_buffer_argument (buf_dst);
+      kernel.add_buffer_argument (buf_src);
       kernel.add_argument (&src_sampler.sampler, sizeof(OpenCL.Sampler));
       kernel.add_argument (&width, sizeof(int));
       kernel.add_argument (&height, sizeof(int));
@@ -151,7 +109,6 @@ default_kernel (__global        uchar* dst,
       q.enqueue_write_image (buf_src, inbuf.data, true);      
       q.enqueue_kernel (kernel, 2, {width, height});      
       q.enqueue_read_image (buf_dst, true, outbuf.data);
-
       q.finish ();
 
       return Gst.FlowReturn.OK;
