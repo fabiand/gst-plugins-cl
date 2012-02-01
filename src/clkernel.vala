@@ -9,7 +9,7 @@ namespace Gst.OpenCl
   /*
    * An OpenCL Kernel element.
    */
-  public class OpenCLVideoFilter : Gst.VideoFilter
+  public class OpenCLVideoFilter : Gst.BaseTransform
   {
     protected static Gst.PadTemplate sink_factory;
     protected static Gst.PadTemplate src_factory;
@@ -118,6 +118,12 @@ default_kernel (__global       uchar* dst,
   dst[gid] = src[gid];
 }
 """;
+    }
+    
+    public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
+    {
+      debug (@"Incaps: $(incaps)");
+      return true;
     }
     
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
