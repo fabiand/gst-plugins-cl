@@ -134,38 +134,25 @@ default_kernel (__global        uchar* dst,
     {
       GOpenCL.Image2D buf_src,
                       buf_dst;
-
-      uint8[] dst = new uint8[outbuf.size];
-      
-      /*
-      foreach (var f in fs)
-      {
-        debug ("%s %s", f.image_channel_order.to_string (), f.image_channel_data_type.to_string ());
-      }*/
+      GOpenCL.Sampler src_sampler;
       
       buf_dst = ctx.create_image (width, height);
       buf_src = ctx.create_image (width, height);
 
-      GOpenCL.Sampler src_sampler = new GOpenCL.Sampler (ctx, false, OpenCL.AddressingMode.CLAMP, OpenCL.FilterMode.NEAREST);
+      src_sampler = new GOpenCL.Sampler (ctx, false, OpenCL.AddressingMode.CLAMP, OpenCL.FilterMode.NEAREST);
 
-      q.enqueue_write_image (buf_src, inbuf.data, true);
-      
       var kernel = program.create_kernel (this.kernel_name, {buf_dst, 
                                                              buf_src});
                                                              
       kernel.add_argument (&src_sampler.sampler, sizeof(OpenCL.Sampler));
       kernel.add_argument (&width, sizeof(int));
       kernel.add_argument (&height, sizeof(int));
-      
-      q.enqueue_kernel (kernel, 2, {width, height});
+
+      q.enqueue_write_image (buf_src, inbuf.data, true);      
+      q.enqueue_kernel (kernel, 2, {width, height});      
+      q.enqueue_read_image (buf_dst, true, outbuf.data);
 
       q.finish ();
-      
-      q.enqueue_read_image (buf_dst, true, dst);
-
-      q.finish ();
-
-      Posix.memcpy (outbuf.data, dst, outbuf.size);
 
       return Gst.FlowReturn.OK;
     }

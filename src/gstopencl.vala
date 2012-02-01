@@ -18,6 +18,7 @@ const Gst.PluginDesc gst_plugin_desc = {
 public static bool plugin_init (Gst.Plugin p)
 {
   Gst.Element.register (p, "clkernel", Gst.Rank.NONE, typeof(Gst.OpenCl.Kernel));
+  Gst.Element.register (p, "clkernel2d", Gst.Rank.NONE, typeof(Gst.OpenCl.Kernel2D));
   Gst.Element.register (p, "clvideofilter", Gst.Rank.NONE, typeof(Gst.OpenCl.VideoFilter));
   return true;
 }
