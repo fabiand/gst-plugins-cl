@@ -28,7 +28,7 @@ gstopencl.c: gopencl/gopencl.c gstopencl.vala clkernel.vala clvideofilter.vala
 
 gopencl/gopencl.c: gopencl/gopencl.vala
 	$(VALAC) $(VALAFLAGS) \
-	--ccode --library=libgopencl -H gopencl.h -o gopencl.c \
+	--ccode --vapi=libgopencl.vapi --library=libgopencl -H gopencl.h -o gopencl.c \
 	gopencl/gopencl.vala
 
 libgstopencl_la_SOURCES = gopencl/gopencl.c gstopencl.c clkernel.c clvideofilter.c
@@ -42,4 +42,4 @@ libgstopencl_la_LIBTOOLFLAGS = --tag=disable-static
 # headers we need but don't want installed
 #noinst_HEADERS = gstplugin.h
 
-CLEANFILES = *.c *.h *.vapi gopencl\*.c
+CLEANFILES = *.c *.h *.vapi gopencl/*.c
