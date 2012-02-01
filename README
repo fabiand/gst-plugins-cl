@@ -1,34 +1,35 @@
-WHAT IT IS
-----------
+About
+-----
+A couple of low level plugins to apply some OpenCL kernel to a Gst.Buffer (as a OpenCL buffer or image2d).
+This can be used for many things:
+- Color conversion
+- Filtering
+- Transforming
+...
 
-gst-plugin is a template for writing your own GStreamer plug-in.
+Oh, and everything GPU based (if it's a GPU OpenCL backend)
 
-The code is deliberately kept simple so that you quickly understand the basics
-of how to set up autotools and your source tree.
+Features
+--------
+Can be used on various gst formats.
 
-This template demonstrates :
-- what to do in autogen.sh
-- how to setup configure.ac (your package name and version, GStreamer flags)
-- how to setup your source dir 
-- what to put in Makefile.am
+Required
+--------
+An OpenCL implementation like Intel OCL SDK, AMD's App Stream SDK or NVIDIA's GPU SDK.
+Free implementations are currently untested (like clover or pocl).
 
-More features and templates might get added later on.
+Build
+-----
+$ ./autogen.sh
+$ make
 
-HOW TO USE IT
--------------
+Use
+---
+$ export GST_PLUGIN_PATH=src/.libs/ 
+$ gst-launch audiotestsrc ! clkernel ! autoaudiosink
+$ gst-launch videotestsrc ! video/x-raw-rgb,framerate=60/1,width=$((1920 / 2)),height=$((1080 / 2))   ! ffmpegcolorspace   ! clvideofilter platform-idx=0 ! ffmpegcolorspace ! xvimagesink
 
-To use it, either make a copy for yourself and rename the parts or use the
-make_element script in tools. To create sources for "myfilter" based on the
-"gsttransform" template run:
-
-cd src;
-../tools/make_element myfilter gsttransform
-
-This will create gstmyfilter.c and gstmyfilter.h. Open them in an editor and
-start editing. There are several occurances of the string "template", update
-those with real values. The plugin will be called 'myfilter' and it will have
-one element called 'myfilter' too. Also look for "FIXME:" markers that point you
-to places where you need to edit the code.
-
-You still need to adjust the Makefile.am.
-
+Future
+------
+Just past us ...
+Allow creation of pipelines on the GPU. This is (at a first glance) not more than providing elements for pushing/fetching buffers onto/from the gpu and an element to send kernels to the gpu.
