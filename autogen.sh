@@ -3,6 +3,8 @@
 # ACLOCAL, AUTOPOINT and/or LIBTOOLIZE to the right versions, or leave them
 # unset and get the defaults
 
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:src/gopencl/
+
 autoreconf --verbose --force --install --make || {
  echo 'autogen.sh failed';
  exit 1;

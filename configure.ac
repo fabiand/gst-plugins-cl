@@ -49,6 +49,7 @@ PKG_CHECK_MODULES(GST, [
   gstreamer-controller-0.10 >= $GST_REQUIRED
   gstreamer-video-0.10 >= $GST_REQUIRED
   gio-2.0
+  OpenCL
 ], [
   AC_SUBST(GST_CFLAGS)
   AC_SUBST(GST_LIBS)

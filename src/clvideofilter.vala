@@ -77,7 +77,6 @@ default_kernel (__global        uchar* dst,
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
       debug (@"$(incaps)");
-      int w = 0, h = 0;
       Gst.video_format_parse_caps  (incaps, ref format, ref width, ref height);
       
       bool r = true;
