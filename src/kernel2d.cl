@@ -72,49 +72,23 @@ max_filter (__global       uchar* dst,
   dst[idx] = r;
 }
 
-#define NUM_BINS 16
+#define NUM_BINS 6
 __kernel void 
-posterize (__global       uchar* dst, 
-           __global const uchar* src, 
-                    const int width,
-                    const int height)
+posterize (__write_only  image2d_t dst, 
+     __read_only   image2d_t src, 
+     const         sampler_t src_sampler, 
+     const         int       width,
+     const         int       height)
 {
   const int x = get_global_id (0);
   const int y = get_global_id (1);
-  const int idx = y * width + x;
   
-  float v = src[y * width + x];
-  v = v / 255 * NUM_BINS;
-  v = (uint) v * 255 / NUM_BINS;
-  dst[idx] = v;
+  float4 v = convert_float4(read_imageui (src, src_sampler, (int2) (x,y)));
+  v *= NUM_BINS;
+  v /= 255;
+  v = round(v);
+  v *= 255 / NUM_BINS;
+  write_imageui(dst, (int2)( x, y ), convert_uint4(v));
 }
 
-
-
-#define IM_RADIX 3
-__kernel void 
-im2 (__write_only  image2d_t dst, 
-                        __read_only   image2d_t src, 
-                        const         sampler_t src_sampler, 
-                        const         int       width,
-                        const         int       height)
-{
-  const int x = get_global_id (0);
-  const int y = get_global_id (1);
-
-
-  float4 r = 0.0f;
-  int n = 0;
-  for (int i = clamp(x - IM_RADIX, 0, width); i < clamp(x + IM_RADIX, 0, width); i++)
-  for (int j = clamp(y - IM_RADIX, 0, height); j < clamp(y + IM_RADIX, 0, height); j++)
-  {
-    uint4 val = read_imageui (src, src_sampler, (int2) (i, j));
-    r += convert_float4(val);
-    n++;
-  }
-  r /= n;
-  
-  uint4 rval = convert_uint4(r);
-  write_imageui(dst, (int2)( x, y ), rval);
-}
 

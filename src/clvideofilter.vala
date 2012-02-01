@@ -5,40 +5,14 @@ namespace Gst.OpenCl
 {
   public class VideoFilter : Kernel
   {
-    /*
-     * Class part
-     */
-    static construct {
-      set_details_simple (
-        "clvideofilter", 
-        "Filter", 
-        "Applying a OpenCl kernel as a filter to a video.", 
-        "author@fabiand.name");
-      
-      sink_factory = new Gst.PadTemplate (
-        "sink", 
-        Gst.PadDirection.SINK, 
-        Gst.PadPresence.REQUEST, 
-        video_format_new_template_caps (Gst.VideoFormat.ARGB)
-      );
-
-      src_factory = new Gst.PadTemplate (
-        "src", 
-        Gst.PadDirection.SRC, 
-        Gst.PadPresence.ALWAYS, 
-        video_format_new_template_caps (Gst.VideoFormat.ARGB)
-      );
-
-      add_pad_template (sink_factory);
-      add_pad_template (src_factory);
-    }
-    
-    /*
-     * Instance part
-     */
     Gst.VideoFormat format;
     int width;
     int height;
+    
+    const OpenCL.ImageFormat required_cl_image_format = {
+      OpenCL.ChannelOrder.RGBA, 
+      OpenCL.ChannelType.UNSIGNED_INT8
+    };
     
     string default_videofilter_source = """
 __kernel void 
@@ -68,6 +42,32 @@ default_kernel (__global        uchar* dst,
   dst[idx] = src[idx];
 }
 """;
+    
+    static construct {
+      set_details_simple (
+        "clvideofilter", 
+        "Filter", 
+        "Applying a OpenCl kernel as a filter to a video.", 
+        "author@fabiand.name");
+      
+      sink_factory = new Gst.PadTemplate (
+        "sink", 
+        Gst.PadDirection.SINK, 
+        Gst.PadPresence.REQUEST, 
+        video_format_new_template_caps (Gst.VideoFormat.RGBA)
+      );
+
+      src_factory = new Gst.PadTemplate (
+        "src", 
+        Gst.PadDirection.SRC, 
+        Gst.PadPresence.ALWAYS, 
+        video_format_new_template_caps (Gst.VideoFormat.RGBA)
+      );
+
+      add_pad_template (sink_factory);
+      add_pad_template (src_factory);
+    }
+    
     construct {
       kernel_source = default_videofilter_source;
       
@@ -80,6 +80,14 @@ default_kernel (__global        uchar* dst,
       Gst.video_format_parse_caps  (incaps, ref format, ref width, ref height);
       
       bool r = true;
+      
+      if (!(required_cl_image_format in ctx.supported_image_formats ()))
+      {
+        error ("OpenCL context does not support the required image format (%s %s).",
+                 required_cl_image_format.image_channel_order.to_string(),
+                 required_cl_image_format.image_channel_data_type.to_string());
+        r = false;
+      }
       
       return r;
     }

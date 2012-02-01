@@ -616,13 +616,19 @@ namespace GOpenCL
     public size_t width;
     public size_t height;
     public size_t pitch;
-      
+
+    public const OpenCL.ImageFormat default_image_format = {
+      OpenCL.ChannelOrder.RGBA, 
+      OpenCL.ChannelType.UNSIGNED_INT8
+    };
+
     public Image2D.in_context (Context ctx, 
                                OpenCL.MemFlags flags, 
                                size_t width, 
                                size_t height, 
                                size_t pitch, 
-                               void* buf) throws Error
+                               void* buf,
+                               OpenCL.ImageFormat image_format = default_image_format) throws Error
     {
       this.context = ctx;
       this.flags = flags;
@@ -631,11 +637,6 @@ namespace GOpenCL
       this.width = width;
       this.height = height;
       this.pitch = pitch;
-
-      OpenCL.ImageFormat image_format = {
-        OpenCL.ChannelOrder.ARGB, 
-        OpenCL.ChannelType.UNSIGNED_INT8
-      };
 
       OpenCL.ErrorCode err;
       this.mem = OpenCL.CreateImage2D(ctx.context,

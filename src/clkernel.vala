@@ -74,15 +74,15 @@ namespace Gst.OpenCl
       platform = platforms[platform_idx];
       Device[] devices = platform.get_devices ();
 
-      debug (@"\n$(platforms.length) platform(s) available.");
+      debug (@"$(platforms.length) platform(s) available.");
       debug (@"Platform: $(platform.get_info(OpenCL.PlatformInfo.NAME))");
-      debug (@"\n$(devices.length) device(s) attached to platform $(platform).");
+      debug (@"$(devices.length) device(s) attached to platform $(platform).");
       
       ctx = platform.create_context ();
       q = ctx.create_command_queue ();
       
       string source = this.load_source_from_file () ?? kernel_source;
-      debug (@"Building program from:\n $(source)");
+      debug (@"Building program from:\n $(kernel_file ?? source)");
       program = ctx.create_program_with_source (source);
       
       return true;

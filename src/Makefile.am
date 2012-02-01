@@ -21,12 +21,12 @@ VALAFLAGS = --verbose --debug --vapidir=. --vapidir=../vapi \
 --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 \
 --pkg OpenCL
 
-gstopencl.c: gopencl/gopencl.c
+gstopencl.c: gopencl/gopencl.c gstopencl.vala clkernel.vala clvideofilter.vala
 	$(VALAC) $(VALAFLAGS) --pkg libgopencl \
 	--ccode --library=libgstcl -H gstcl.h -o gstopencl.c \
 	gstopencl.vala clkernel.vala clvideofilter.vala
 
-gopencl/gopencl.c:
+gopencl/gopencl.c: gopencl/gopencl.vala
 	$(VALAC) $(VALAFLAGS) \
 	--ccode --library=libgopencl -H gopencl.h -o gopencl.c \
 	gopencl/gopencl.vala
