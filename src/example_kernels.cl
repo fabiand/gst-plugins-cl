@@ -35,7 +35,7 @@ else
 };
 
 
-#define BI_RADIX 12
+#define BI_RADIX 48
 __kernel void 
 bidiff (__global       uchar* dst, 
         __global const uchar* src, 
@@ -44,24 +44,24 @@ bidiff (__global       uchar* dst,
 {
   int x = get_global_id (0),
       y = get_global_id (1);
-
-  int w = width / 2;
+  
   int idx = y * width + x;
 
+  int w = width / 2;
   if (x < w)
   {
     int n = 0;
     float r = 0;
-    float sum_a = 0.1, 
-          sum_b = 0.1;
+    float sum_a = 0, 
+          sum_b = 0;
     
     for (int lx = clamp(x-BI_RADIX, 0, w) ; lx < clamp(x+BI_RADIX, 0, w) ; lx++)
     {
       for (int ly = clamp(y-BI_RADIX, 0, height) ; ly < clamp(y+BI_RADIX, 0, height) ; ly++)
     {
         int lidx = ly * width + lx;
-        float lv = src[lidx], 
-              rv = src[lidx + w];
+        float lv = convert_float(src[lidx]), 
+              rv = convert_float(src[lidx + w]);
 
         r += lv * rv;
         sum_a += lv * lv;
@@ -69,10 +69,8 @@ bidiff (__global       uchar* dst,
         n++;
       }
     }
-    float aa = n * (255*255);
-    aa = (sqrt(sum_a) * sqrt(sum_b))*2;
-    r = r / aa;
-    dst[idx] = r * 255;
+    r = r / (sqrt(sum_a) * sqrt(sum_b));
+    dst[idx] = convert_uchar(r * 255);
   }
   else
   {

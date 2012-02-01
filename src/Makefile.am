@@ -3,7 +3,7 @@
 ##############################################################################
 # TODO: change libgstplugin.la to something else, e.g. libmysomething.la     #
 ##############################################################################
-plugin_LTLIBRARIES = libgstpush.la
+plugin_LTLIBRARIES = libgstopencl.la
 
 ##############################################################################
 # TODO: for the next set of variables, name the prefix if you named the .la, #
@@ -31,14 +31,15 @@ gopencl/gopencl.c: gopencl/gopencl.vala
 	--ccode --library=libgopencl -H gopencl.h -o gopencl.c \
 	gopencl/gopencl.vala
 
-libgstpush_la_SOURCES = gopencl/gopencl.c gstopencl.c clkernel.c clvideofilter.c
+libgstopencl_la_SOURCES = gopencl/gopencl.c gstopencl.c clkernel.c clvideofilter.c
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
-libgstpush_la_CFLAGS = $(GST_CFLAGS)
-libgstpush_la_LIBADD = $(GST_LIBS)
-libgstpush_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstpush_la_LIBTOOLFLAGS = --tag=disable-static
-
+libgstopencl_la_CFLAGS = $(GST_CFLAGS)
+libgstopencl_la_LIBADD = $(GST_LIBS)
+libgstopencl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstopencl_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
 #noinst_HEADERS = gstplugin.h
+
+CLEANFILES = *.c *.h *.vapi gopencl\*.c
