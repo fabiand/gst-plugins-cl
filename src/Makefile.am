@@ -24,7 +24,7 @@ VALAFLAGS = --verbose --debug --vapidir=. --vapidir=../vapi \
 gstopencl.c: gopencl/gopencl.c gstopencl.vala clkernel.vala clvideofilter.vala
 	$(VALAC) $(VALAFLAGS) --pkg libgopencl \
 	--ccode --library=libgstcl -H gstcl.h -o gstopencl.c \
-	gstopencl.vala clkernel.vala clvideofilter.vala
+	gstopencl.vala openclbasetransform.vala clkernel.vala clkernel2d.vala clvideofilter.vala
 
 gopencl/gopencl.c: gopencl/gopencl.vala
 	$(VALAC) $(VALAFLAGS) \
