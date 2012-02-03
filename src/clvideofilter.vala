@@ -1,4 +1,3 @@
-
 /* vim: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab: */
 
 namespace Gst.OpenCl
@@ -84,6 +83,7 @@ default_kernel (__write_only  image2d_t dst,
       GOpenCL.Image2D buf_src,
                       buf_dst;
       GOpenCL.Sampler src_sampler;
+      GOpenCL.Kernel kernel;
       
       buf_dst = ctx.create_image (width, height);
       buf_src = ctx.create_image (width, height);
@@ -92,7 +92,7 @@ default_kernel (__write_only  image2d_t dst,
                                          OpenCL.AddressingMode.CLAMP, 
                                          OpenCL.FilterMode.NEAREST);
 
-      var kernel = program.create_kernel (this.kernel_name);
+      kernel = program.create_kernel (this.kernel_name);
       kernel.add_buffer_argument (buf_dst);
       kernel.add_buffer_argument (buf_src);
       kernel.add_argument (&src_sampler.sampler, sizeof(OpenCL.Sampler));
