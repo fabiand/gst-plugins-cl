@@ -21,17 +21,20 @@ VALAFLAGS = --verbose --debug --vapidir=. --vapidir=../vapi \
 --pkg gstreamer-0.10 --pkg gstreamer-video-0.10 \
 --pkg OpenCL
 
+GSTOPENCL_VALA_FILES = gstopencl.vala openclbasetransform.vala \
+  clkernel.vala clkernel2d.vala clvideofilter.vala
+GSTOPENCL_C_FILES = $(GSTOPENCL_VALA_FILES:.vala=.c)
+
 gstopencl.c: gopencl/gopencl.c gstopencl.vala clkernel.vala clvideofilter.vala
 	$(VALAC) $(VALAFLAGS) --pkg libgopencl \
-	--ccode --library=libgstcl -H gstcl.h -o gstopencl.c \
-	gstopencl.vala openclbasetransform.vala clkernel.vala clkernel2d.vala clvideofilter.vala
+	--ccode --library=libgstcl -H gstcl.h -o gstopencl.c $(GSTOPENCL_VALA_FILES)
 
 gopencl/gopencl.c: gopencl/gopencl.vala
 	$(VALAC) $(VALAFLAGS) \
 	--ccode --vapi=libgopencl.vapi --library=libgopencl -H gopencl.h -o gopencl.c \
 	gopencl/gopencl.vala
 
-libgstopencl_la_SOURCES = gopencl/gopencl.c gstopencl.c clkernel.c clvideofilter.c
+libgstopencl_la_SOURCES = gopencl/gopencl.c $(GSTOPENCL_C_FILES)
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
 libgstopencl_la_CFLAGS = $(GST_CFLAGS)
