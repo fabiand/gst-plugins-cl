@@ -1,7 +1,6 @@
 
 /* vim: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab: */
 
-// Have a look at https://gitorious.org/valastuff/ etc
 using GOpenCL;
 
 namespace Gst.OpenCl
@@ -138,12 +137,12 @@ default_kernel (__global       uchar* dst,
 
       process (out kernel, 
                inbuf, outbuf,
-               ref buf_src, ref buf_dst);
+               buf_src, buf_dst);
       
       return Gst.FlowReturn.OK;
     }
     
-    public void prepare_buffers (Gst.Buffer inbuf, Gst.Buffer outbuf,
+    public virtual void prepare_buffers (Gst.Buffer inbuf, Gst.Buffer outbuf,
                           out GOpenCL.Buffer buf_src, out GOpenCL.Buffer buf_dst)
     {
       buf_src = ctx.create_buffer (inbuf.size, 
@@ -154,9 +153,9 @@ default_kernel (__global       uchar* dst,
                                    OpenCL.MemFlags.WRITE_ONLY);
     }
     
-    public void process (out GOpenCL.Kernel kernel, 
+    public virtual void process (out GOpenCL.Kernel kernel, 
                             Gst.Buffer inbuf, Gst.Buffer outbuf,
-                            ref GOpenCL.Buffer buf_src, ref GOpenCL.Buffer buf_dst)
+                            GOpenCL.Buffer buf_src, GOpenCL.Buffer buf_dst)
     {
       kernel = program.create_kernel (this.kernel_name);
       kernel.add_buffer_argument (buf_dst);
@@ -210,16 +209,10 @@ default_kernel (__global        uchar* dst,
       return true;
     }
 
-    public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
-    requires (inbuf.size == outbuf.size)
+    public override void process (out GOpenCL.Kernel kernel, 
+                            Gst.Buffer inbuf, Gst.Buffer outbuf,
+                            GOpenCL.Buffer buf_src, GOpenCL.Buffer buf_dst)
     {
-      GOpenCL.Buffer buf_src,
-                     buf_dst;
-      GOpenCL.Kernel kernel;
-      
-      prepare_buffers (inbuf, outbuf, 
-                       out buf_src, out buf_dst);
-
       kernel = program.create_kernel (this.kernel_name);
       kernel.add_buffer_argument (buf_dst);
       kernel.add_buffer_argument (buf_src);
@@ -230,8 +223,6 @@ default_kernel (__global        uchar* dst,
       q.enqueue_read_buffer (buf_dst, true, outbuf.data, 
                              outbuf.size);
       q.finish ();
-      
-      return Gst.FlowReturn.OK;
     }
   }
 }
