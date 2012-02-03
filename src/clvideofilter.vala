@@ -3,20 +3,10 @@
 
 namespace Gst.OpenCl
 {
-  public class VideoFilter : Kernel
-  {
-    Gst.VideoFormat format;
-    int width;
-    int height;
-    
-    const OpenCL.ImageFormat required_cl_image_format = {
-      OpenCL.ChannelOrder.RGBA, 
-      OpenCL.ChannelType.UNSIGNED_INT8
-    };
-    
-    string default_videofilter_source = """
+
+  const string DEFAULT_SOURCE_VIDEOFILTER =  """
 __kernel void 
-default_kernel_image2d (__write_only  image2d_t dst, 
+default_kernel (__write_only  image2d_t dst, 
                         __read_only   image2d_t src, 
                         const         sampler_t src_sampler, 
                         const         int       width,
@@ -28,20 +18,18 @@ default_kernel_image2d (__write_only  image2d_t dst,
   uint4 val = read_imageui (src, src_sampler, (int2) (x, y));
   write_imageui(dst, (int2)( x, y ), val);
 }
-
-__kernel void 
-default_kernel (__global        uchar* dst, 
-                __global const  uchar* src, 
-                         const  int width,
-                         const  int height)
-{
-  const int x = get_global_id (0);
-  const int y = get_global_id (1);
-  const int idx = y * width + x;
-
-  dst[idx] = src[idx];
-}
 """;
+
+  public class VideoFilter : Kernel
+  {
+    Gst.VideoFormat format;
+    int width;
+    int height;
+    
+    const OpenCL.ImageFormat required_cl_image_format = {
+      OpenCL.ChannelOrder.RGBA, 
+      OpenCL.ChannelType.UNSIGNED_INT8
+    };
     
     static construct {
       set_details_simple (
@@ -69,9 +57,7 @@ default_kernel (__global        uchar* dst,
     }
     
     construct {
-      kernel_source = default_videofilter_source;
-      
-      kernel_name = "default_kernel_image2d";
+      kernel_source = DEFAULT_SOURCE_VIDEOFILTER;
     }
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)

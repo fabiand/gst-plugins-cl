@@ -4,6 +4,19 @@ using GOpenCL;
 
 namespace Gst.OpenCl
 {
+
+  const string DEFAULT_SOURCE_KERNEL = """
+  __kernel void 
+  default_kernel (__global       uchar* dst, 
+                  __global const uchar* src, 
+                           const uint   size)
+  {
+    int gid = get_global_id (0);
+    int lid = get_local_id (0);
+    dst[gid] = src[gid];
+  }
+  """;
+
   /*
    * An OpenCL Kernel element.
    */
@@ -20,17 +33,7 @@ namespace Gst.OpenCl
     }
     
     construct {
-      kernel_source = """
-__kernel void 
-default_kernel (__global       uchar* dst, 
-                __global const uchar* src, 
-                         const uint   size)
-{
-  int gid = get_global_id (0);
-  int lid = get_local_id (0);
-  dst[gid] = src[gid];
-}
-""";
+      kernel_source = DEFAULT_SOURCE_KERNEL;
     }
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
