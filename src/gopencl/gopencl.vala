@@ -746,17 +746,35 @@ namespace GOpenCL
       this.kernel = OpenCL.CreateKernel (p.program, (char[]) name.data, out err);
     }
     
-    public void add_argument (void* p, size_t s) throws Error
+    public KernelArg? add_argument (void* p, size_t s) throws Error
     {
-      OpenCL.ErrorCode result;
-      result = OpenCL.SetKernelArg (this.kernel, this.num_args_set, s, p);
-      check_result (result, @"Failed setting an argument on kernel '$(this.name)' ($(this.num_args_set)).");
+      KernelArg arg = {this, this.num_args_set};
+      this.set_argument (arg.idx, p, s);
       this.num_args_set++;
+      return arg;
     }
     
-    public void add_buffer_argument (Buffer b) throws Error
+    public void set_argument (int idx, void* p, size_t s) throws Error
     {
-      add_argument (&b.mem, sizeof(OpenCL.Mem));
+      OpenCL.ErrorCode result;
+      result = OpenCL.SetKernelArg (this.kernel, idx, s, p);
+      check_result (result, @"Failed setting an argument on kernel '$(this.name)' ($(this.num_args_set)).");
+    }
+    
+    public KernelArg add_buffer_argument (Buffer b) throws Error
+    {
+      return add_argument (&b.mem, sizeof(OpenCL.Mem));
+    }
+    
+    public struct KernelArg
+    {
+      Kernel kernel;
+      int idx;
+      
+      public void set (void* p, size_t s)
+      {
+        this.kernel.set_argument (idx, p, s);
+      }
     }
   }
 

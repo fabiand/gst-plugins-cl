@@ -70,7 +70,7 @@ bidiff (__global       uchar* dst,
       }
     }
     r = r / (sqrt(sum_a) * sqrt(sum_b));
-    dst[idx] = convert_uchar(r * 255);
+    dst[idx] = 0; //convert_uchar(r * 255);
   }
   else
   {
