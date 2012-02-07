@@ -99,7 +99,10 @@ default_kernel (__write_only  image2d_t dst,
       kernel.add_argument (&width, sizeof(int));
       kernel.add_argument (&height, sizeof(int));
 
-      q.enqueue_write_image (buf_src, inbuf.data, true);      
+      Memory.set (outbuf.data, 0, outbuf.size);
+
+      q.enqueue_write_image (buf_dst, outbuf.data, true);
+      q.enqueue_write_image (buf_src, inbuf.data, true);
       q.enqueue_kernel (kernel, 2, {width, height});      
       q.enqueue_read_image (buf_dst, true, outbuf.data);
       q.finish ();

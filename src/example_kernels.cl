@@ -35,7 +35,7 @@ else
 };
 
 
-#define BI_RADIX 48
+#define BI_RADIX 3
 __kernel void 
 bidiff (__global       uchar* dst, 
         __global const uchar* src, 
@@ -46,8 +46,8 @@ bidiff (__global       uchar* dst,
       y = get_global_id (1);
   
   int idx = y * width + x;
-
   int w = width / 2;
+  
   if (x < w)
   {
     int n = 0;
@@ -58,7 +58,7 @@ bidiff (__global       uchar* dst,
     for (int lx = clamp(x-BI_RADIX, 0, w) ; lx < clamp(x+BI_RADIX, 0, w) ; lx++)
     {
       for (int ly = clamp(y-BI_RADIX, 0, height) ; ly < clamp(y+BI_RADIX, 0, height) ; ly++)
-    {
+      {
         int lidx = ly * width + lx;
         float lv = convert_float(src[lidx]), 
               rv = convert_float(src[lidx + w]);
@@ -69,12 +69,47 @@ bidiff (__global       uchar* dst,
         n++;
       }
     }
-    r = r / (sqrt(sum_a) * sqrt(sum_b));
-    dst[idx] = 0; //convert_uchar(r * 255);
+    //r = r / (sqrt(sum_a) * sqrt(sum_b));
+    r = r / (n*255*255);
+    if (r > 1 || r < 0)
+    {
+      dst[idx+w] = 0xff;
+    }
+    else
+    {
+      r *= 255;
+    }
+    dst[idx] = convert_uchar(r);
   }
   else
   {
     dst[idx] = src[idx];
 //    dst[idx] = abs(src[idx] - src[idx+w]);
   }
+}
+
+
+__kernel void 
+imrotate (__write_only  image2d_t dst, 
+          __read_only   image2d_t src, 
+          const         sampler_t src_sampler, 
+          const         int       width,
+          const         int       height)
+{
+  const int x = get_global_id (0);
+  const int y = get_global_id (1);
+  int x2 = 0, y2 = 0;
+  float a = -1;
+  
+  float fx = x, 
+        fy = y;
+  
+  x2 = fx * cos(a) + fy * sin(a);
+  y2 = -fx * sin(a) + fy * cos(a);
+  
+  x2 = clamp(x2, 0, width-1);
+  y2 = clamp(y2, 0, height-1);
+  
+  uint4 val = read_imageui (src, src_sampler, (int2) (x, y));
+  write_imageui(dst, (int2)( x2, y2 ), val);
 }
