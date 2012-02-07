@@ -6,6 +6,7 @@ namespace Gst.OpenCl
 {
 
   const string DEFAULT_SOURCE_KERNEL2D = """
+  // FIXME This kernel doesn't respect colors
   __kernel void 
   default_kernel (__global        uchar* dst, 
                   __global const  uchar* src, 
@@ -47,19 +48,15 @@ namespace Gst.OpenCl
       return true;
     }
 
-    public override void process (out GOpenCL.Kernel kernel, 
-                            Gst.Buffer inbuf, Gst.Buffer outbuf,
-                            GOpenCL.Buffer buf_src, GOpenCL.Buffer buf_dst)
+    public override void process (Gst.Buffer inbuf, Gst.Buffer outbuf)
     {
-      kernel = program.create_kernel (this.kernel_name);
-      kernel.add_buffer_argument (buf_dst);
-      kernel.add_buffer_argument (buf_src);
-      kernel.add_argument (&width, sizeof(int));
-      kernel.add_argument (&height, sizeof(int));
+      kernel.set_argument (0, &buf_dst.mem, sizeof(OpenCL.Mem));
+      kernel.set_argument (1, &buf_src.mem, sizeof(OpenCL.Mem));
+      kernel.set_argument (2, &width, sizeof(int));
+      kernel.set_argument (3, &height, sizeof(int));
       
       q.enqueue_kernel (kernel, 2, {width, height});
-      q.enqueue_read_buffer (buf_dst, true, outbuf.data, 
-                             outbuf.size);
+      q.enqueue_read_buffer (buf_dst, true, outbuf.data, outbuf.size);
       q.finish ();
     }
   }

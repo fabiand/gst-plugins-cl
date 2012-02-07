@@ -22,6 +22,9 @@ namespace Gst.OpenCl
    */
   public class Kernel : OpenCLBaseTransform
   {
+    protected GOpenCL.Buffer buf_src;
+    protected GOpenCL.Buffer buf_dst;
+      
     static construct {
       set_details_simple (
         "clkernel", 
@@ -44,23 +47,15 @@ namespace Gst.OpenCl
     
     public override Gst.FlowReturn transform (Gst.Buffer inbuf, Gst.Buffer outbuf)
     requires (inbuf.size == outbuf.size)
-    {
-      GOpenCL.Buffer buf_src,
-                     buf_dst;
-      GOpenCL.Kernel kernel;
-      
-      prepare_buffers (inbuf, outbuf, 
-                       out buf_src, out buf_dst);
+    {      
+      prepare_buffers (inbuf, outbuf);
 
-      process (out kernel, 
-               inbuf, outbuf,
-               buf_src, buf_dst);
+      process (inbuf, outbuf);
       
       return Gst.FlowReturn.OK;
     }
     
-    public virtual void prepare_buffers (Gst.Buffer inbuf, Gst.Buffer outbuf,
-                          out GOpenCL.Buffer buf_src, out GOpenCL.Buffer buf_dst)
+    public virtual void prepare_buffers (Gst.Buffer inbuf, Gst.Buffer outbuf)
     {
       buf_src = ctx.create_buffer (inbuf.size, 
                                    OpenCL.MemFlags.COPY_HOST_PTR | 
@@ -70,18 +65,14 @@ namespace Gst.OpenCl
                                    OpenCL.MemFlags.WRITE_ONLY);
     }
     
-    public virtual void process (out GOpenCL.Kernel kernel, 
-                            Gst.Buffer inbuf, Gst.Buffer outbuf,
-                            GOpenCL.Buffer buf_src, GOpenCL.Buffer buf_dst)
+    public virtual void process (Gst.Buffer inbuf, Gst.Buffer outbuf)
     {
-      kernel = program.create_kernel (this.kernel_name);
-      kernel.add_buffer_argument (buf_dst);
-      kernel.add_buffer_argument (buf_src);
-      kernel.add_argument (&inbuf.size, sizeof(uint));
+      kernel.set_argument (0, &buf_dst.mem, sizeof(OpenCL.Mem));
+      kernel.set_argument (1, &buf_src.mem, sizeof(OpenCL.Mem));
+      kernel.set_argument (2, &inbuf.size, sizeof(uint));
       
       q.enqueue_kernel (kernel, 1, {inbuf.size});
-      q.enqueue_read_buffer (buf_dst, true, outbuf.data, 
-                             outbuf.size);
+      q.enqueue_read_buffer (buf_dst, true, outbuf.data, outbuf.size);
       q.finish ();
     }
   }

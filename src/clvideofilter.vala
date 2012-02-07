@@ -25,10 +25,12 @@ default_kernel (__write_only  image2d_t dst,
     int width;
     int height;
     
+    /*
+     * Overwrite previous variables, as we are in an imagespace.
+     */
     GOpenCL.Image2D buf_src;
     GOpenCL.Image2D buf_dst;
     GOpenCL.Sampler src_sampler;
-    GOpenCL.Kernel kernel;
     
     const OpenCL.ImageFormat required_cl_image_format = {
       OpenCL.ChannelOrder.RGBA, 
@@ -62,9 +64,6 @@ default_kernel (__write_only  image2d_t dst,
     
     construct {
       kernel_source = DEFAULT_SOURCE_VIDEOFILTER;
-      
-      kernel = program.create_kernel (this.kernel_name);
-      
       src_sampler = new GOpenCL.Sampler (ctx, false, 
                                          OpenCL.AddressingMode.CLAMP, 
                                          OpenCL.FilterMode.NEAREST);
