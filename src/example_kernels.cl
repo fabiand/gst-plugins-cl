@@ -97,7 +97,7 @@ imrotate (__write_only  image2d_t dst,
 {
   const int x = get_global_id (0);
   const int y = get_global_id (1);
-  int x2 = 0, y2 = 0;
+  /*int x2 = 0, y2 = 0;
   float a = 0.1;
   
   float fx = x, 
@@ -105,7 +105,7 @@ imrotate (__write_only  image2d_t dst,
   
   x2 = fx * cos(a) + fy * sin(a);
   y2 = -fx * sin(a) + fy * cos(a);
-  
-  uint4 val = read_imageui (src, src_sampler, (int2) (x2, y2));
+  */
+  uint4 val = read_imageui (src, src_sampler, (int2) (x, y));
   write_imageui(dst, (int2)( x, y ), val);
 }

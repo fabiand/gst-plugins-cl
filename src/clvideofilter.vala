@@ -64,9 +64,12 @@ default_kernel (__write_only  image2d_t dst,
     
     construct {
       kernel_source = DEFAULT_SOURCE_VIDEOFILTER;
+      debug("ok2");
+      assert (ctx != null);
       src_sampler = new GOpenCL.Sampler (ctx, false, 
-                                         OpenCL.AddressingMode.CLAMP, 
-                                         OpenCL.FilterMode.NEAREST);
+                                   OpenCL.AddressingMode.CLAMP, 
+                                   OpenCL.FilterMode.NEAREST);
+                                   debug("ok3");
     }
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)

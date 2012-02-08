@@ -30,7 +30,7 @@ namespace Gst.OpenCl
       set;
       default = "default_kernel";
     }
-    public string kernel_file {
+    public string? kernel_file {
       get;
       set;
       default = null;
@@ -81,9 +81,9 @@ namespace Gst.OpenCl
     }
     
     public override bool start ()
-    {      
+    {
       string source = this.load_source_from_file () ?? kernel_source;
-      debug (@"Building program from:\n $(kernel_file ?? source)");
+      debug (@"Building program from:\n $(kernel_file)\n ?? $(source)"); // FIXME it should be file ?? source, but this segfaults
       program = ctx.create_program_with_source (source);
       kernel = program.create_kernel (this.kernel_name);
       
