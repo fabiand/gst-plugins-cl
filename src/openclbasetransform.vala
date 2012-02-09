@@ -37,16 +37,7 @@ namespace Gst.OpenCl
     }
     
     construct {
-      Platform[] platforms = Platform.get_available ();
-      platform = platforms[platform_idx];
-      Device[] devices = platform.get_devices ();
 
-      debug (@"$(platforms.length) platform(s) available.");
-      debug (@"Platform: $(platform.get_info(OpenCL.PlatformInfo.NAME))");
-      debug (@"$(devices.length) device(s) attached to platform $(platform).");
-      
-      ctx = platform.create_context ();
-      q = ctx.create_command_queue ();
     }
     
     protected class void init_any_caps ()
@@ -82,6 +73,17 @@ namespace Gst.OpenCl
     
     public override bool start ()
     {
+      Platform[] platforms = Platform.get_available ();
+      platform = platforms[platform_idx];
+      Device[] devices = platform.get_devices ();
+
+      debug (@"$(platforms.length) platform(s) available.");
+      debug (@"Platform: $(platform.get_info(OpenCL.PlatformInfo.NAME))");
+      debug (@"$(devices.length) device(s) attached to platform $(platform).");
+      
+      ctx = platform.create_context ();
+      q = ctx.create_command_queue ();
+      
       string source = this.load_source_from_file () ?? kernel_source;
       debug (@"Building program from:\n $(kernel_file)\n ?? $(source)"); // FIXME it should be file ?? source, but this segfaults
       program = ctx.create_program_with_source (source);
