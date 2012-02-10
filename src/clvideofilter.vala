@@ -3,6 +3,8 @@
 namespace Gst.OpenCl
 {
 
+  const string OPENCL_MIME_IMAGE2D = "application/x-opencl-image2d";
+  
   const string DEFAULT_SOURCE_VIDEOFILTER =  """
 __kernel void 
 default_kernel (__write_only  image2d_t dst, 
@@ -11,11 +13,10 @@ default_kernel (__write_only  image2d_t dst,
                 const         int       width,
                 const         int       height)
 {
-  const int x = get_global_id (0);
-  const int y = get_global_id (1);
+  const int2 pos = (int2) (get_global_id (0), get_global_id (1));
 
-  uint4 val = read_imageui (src, src_sampler, (int2) (x, y));
-  write_imageui(dst, (int2)( x, y ), val);
+  uint4 val = read_imageui (src, src_sampler, pos);
+  write_imageui(dst, pos, val);
 }
 """;
 
@@ -28,8 +29,8 @@ default_kernel (__write_only  image2d_t dst,
     /*
      * Overwrite previous variables, as we are in an imagespace.
      */
-    GOpenCL.Image2D buf_src;
-    GOpenCL.Image2D buf_dst;
+    new GOpenCL.Image2D buf_src;
+    new GOpenCL.Image2D buf_dst;
     GOpenCL.Sampler src_sampler;
     
     const OpenCL.ImageFormat required_cl_image_format = {
@@ -107,7 +108,7 @@ default_kernel (__write_only  image2d_t dst,
       q.enqueue_kernel (kernel, 2, {width, height});      
       q.enqueue_read_image (buf_dst, true, outbuf.data);
       q.finish ();
-
+      
       return Gst.FlowReturn.OK;
     }
   }
