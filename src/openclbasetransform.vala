@@ -35,6 +35,16 @@ namespace Gst.OpenCl
       set;
       default = null;
     }
+    public string? incaps {
+      get;
+      set;
+      default = null;
+    }
+    public string? outcaps {
+      get;
+      set;
+      default = null;
+    }
     
     construct {
 
@@ -95,6 +105,25 @@ namespace Gst.OpenCl
     public override bool stop ()
     {
       return true;
+    }
+    
+    public override Gst.Caps transform_caps (Gst.PadDirection direction, 
+                                             Gst.Caps incaps)
+    {
+      Gst.Caps t = incaps;
+      
+      switch (direction)
+      {
+        case Gst.PadDirection.SRC:
+          if (this.incaps != null) t = Gst.Caps.from_string (this.incaps);
+          break;
+          
+        case Gst.PadDirection.SINK:
+          if (this.outcaps != null) t = Gst.Caps.from_string (this.outcaps);
+          break;
+      }
+      
+      return t;
     }
   }
 }

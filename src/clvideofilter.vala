@@ -65,10 +65,6 @@ default_kernel (__write_only  image2d_t dst,
     
     construct {
       kernel_source = DEFAULT_SOURCE_VIDEOFILTER;
-      assert (ctx != null);
-      src_sampler = new GOpenCL.Sampler (ctx, false, 
-                                   OpenCL.AddressingMode.CLAMP, 
-                                   OpenCL.FilterMode.NEAREST);
     }
     
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
@@ -93,6 +89,10 @@ default_kernel (__write_only  image2d_t dst,
     requires (inbuf.size == outbuf.size)
     {
       Memory.set (outbuf.data, 0, outbuf.size);
+      
+      src_sampler = new GOpenCL.Sampler (ctx, false, 
+                                   OpenCL.AddressingMode.CLAMP, 
+                                   OpenCL.FilterMode.NEAREST);
       
       buf_dst = ctx.create_image (width, height);
       buf_src = ctx.create_image (width, height);

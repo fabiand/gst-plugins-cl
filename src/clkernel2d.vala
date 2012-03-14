@@ -6,7 +6,6 @@ namespace Gst.OpenCl
 {
 
   const string DEFAULT_SOURCE_KERNEL2D = """
-  // FIXME This kernel doesn't respect colors
   __kernel void 
   default_kernel (__global        uchar* dst, 
                   __global const  uchar* src, 
