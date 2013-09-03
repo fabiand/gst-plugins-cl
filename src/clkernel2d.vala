@@ -22,17 +22,17 @@ namespace Gst.OpenCl
 
   public class Kernel2D : Kernel
   {
-    Gst.VideoFormat format;
+    Gst.Video.Format format;
     int width;
     int height;
-    
+
     static construct {
-      set_details_simple (
+      set_static_metadata (
         "clvideofilter", 
         "Filter", 
         "Applying a 2-D OpenCl kernel.", 
         "author@fabiand.name");
-      
+
       init_any_caps ();
     }
 
@@ -43,7 +43,11 @@ namespace Gst.OpenCl
     public override bool set_caps (Gst.Caps incaps, Gst.Caps outcaps)
     {
       debug (@"Incaps $(incaps).");
-      Gst.video_format_parse_caps  (incaps, ref format, ref width, ref height);
+      var incapsinfo = Gst.Video.Info();
+      incapsinfo.from_caps (incaps);
+      this.format = incapsinfo.finfo.format;
+      this.width = incapsinfo.width;
+      this.height = incapsinfo.height;
       return true;
     }
 
@@ -53,9 +57,10 @@ namespace Gst.OpenCl
       kernel.set_argument (1, &buf_src.mem, sizeof(OpenCL.Mem));
       kernel.set_argument (2, &width, sizeof(int));
       kernel.set_argument (3, &height, sizeof(int));
-      
+
       q.enqueue_kernel (kernel, 2, {width, height});
-      q.enqueue_read_buffer (buf_dst, true, outbuf.data, outbuf.size);
+      q.enqueue_read_buffer (buf_dst, true, buf_dst_info.data,
+                             buf_dst_info.size);
       q.finish ();
     }
   }

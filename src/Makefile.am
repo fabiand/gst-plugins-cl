@@ -18,7 +18,7 @@ plugin_LTLIBRARIES = libgstopencl.la
 
 VALAFLAGS = --verbose --debug --vapidir=. --vapidir=../vapi \
 --pkg posix --pkg gio-2.0 \
---pkg gstreamer-0.10 --pkg gstreamer-video-0.10 \
+--pkg gstreamer-1.0 --pkg gstreamer-video-1.0 --pkg gstreamer-base-1.0 \
 --pkg OpenCL
 
 GSTOPENCL_VALA_FILES = gstopencl.vala openclbasetransform.vala \

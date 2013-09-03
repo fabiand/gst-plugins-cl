@@ -7,19 +7,19 @@ namespace Gst.OpenCl
   /*
    * An OpenCL Kernel element.
    */
-  public class OpenCLBaseTransform : Gst.BaseTransform
+  public class OpenCLBaseTransform : Gst.Base.Transform
   {
     protected static Gst.PadTemplate sink_factory;
     protected static Gst.PadTemplate src_factory;
-    
+
     protected Platform platform;
     protected Context ctx;
     protected CommandQueue q;
     protected Program program;
-    
+
     protected string kernel_source;
     protected GOpenCL.Kernel kernel;
-    
+
     public uint platform_idx {
       get;
       set;
@@ -45,11 +45,11 @@ namespace Gst.OpenCl
       set;
       default = null;
     }
-    
+
     construct {
 
     }
-    
+
     protected class void init_any_caps ()
     {
       sink_factory = new Gst.PadTemplate (
@@ -69,18 +69,18 @@ namespace Gst.OpenCl
       add_pad_template (sink_factory);
       add_pad_template (src_factory);
     }
-    
+
     string load_source_from_file ()
     {
       uint8[] c = null;
       if (this.kernel_file != null)
       {
         File f = File.new_for_path (this.kernel_file);
-        f.load_contents (null, out c);
+        f.load_contents (null, out c, null);
       }
       return (string) c;
     }
-    
+
     public override bool start ()
     {
       Platform[] platforms = Platform.get_available ();
@@ -90,15 +90,15 @@ namespace Gst.OpenCl
       debug (@"$(platforms.length) platform(s) available.");
       debug (@"Platform: $(platform.get_info(OpenCL.PlatformInfo.NAME))");
       debug (@"$(devices.length) device(s) attached to platform $(platform).");
-      
+
       ctx = platform.create_context ();
       q = ctx.create_command_queue ();
-      
+
       string source = this.load_source_from_file () ?? kernel_source;
       debug (@"Building program from:\n $(kernel_file)\n ?? $(source)"); // FIXME it should be file ?? source, but this segfaults
       program = ctx.create_program_with_source (source);
       kernel = program.create_kernel (this.kernel_name);
-      
+
       return true;
     }
 
@@ -106,23 +106,24 @@ namespace Gst.OpenCl
     {
       return true;
     }
-    
+
     public override Gst.Caps transform_caps (Gst.PadDirection direction, 
-                                             Gst.Caps incaps)
+                                             Gst.Caps incaps,
+                                             Gst.Caps filter)
     {
       Gst.Caps t = incaps;
-      
+
       switch (direction)
       {
         case Gst.PadDirection.SRC:
           if (this.incaps != null) t = Gst.Caps.from_string (this.incaps);
           break;
-          
+
         case Gst.PadDirection.SINK:
           if (this.outcaps != null) t = Gst.Caps.from_string (this.outcaps);
           break;
       }
-      
+
       return t;
     }
   }
